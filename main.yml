@@ -1,0 +1,24 @@
+---
+- hosts: all
+  roles:
+    - geerlingguy.docker
+  tasks:
+    - name: Log into broadcaster registry and force re-authorization
+      community.docker.docker_login:
+        registry: registry.broadcaster.vc
+        username: "{{ lookup('env', 'REGISTRY_USERNAME') }}"
+        password: "{{ lookup('env', 'REGISTRY_PASSWORD') }}"
+        reauthorize: yes
+    - name: Start docker Container
+      community.docker.docker_container:
+        recreate: true
+        state: started
+        name: broadcaster-watcher
+        image: registry.broadcaster.vc/broadcaster/broadcaster-watcher
+        restart_policy: unless-stopped
+        network_mode: host
+        pull: yes
+        env:
+          API_KEY: "{{ lookup('env', 'API_KEY') }}"
+          WATCHER_ID: "{{ lookup('env', 'WATCHER_ID') }}"
+          NDI_SDK_LICENSE: agree
